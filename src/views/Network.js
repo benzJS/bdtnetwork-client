@@ -1,36 +1,59 @@
-import React from 'react';
+import React from "react";
 
-import BootstrapTable from 'react-bootstrap-table-next';
-import paginationFactory from 'react-bootstrap-table2-paginator';
+import BootstrapTable from "react-bootstrap-table-next";
+import paginationFactory from "react-bootstrap-table2-paginator";
 
-import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
+
+import data from "../data";
 
 export default props => {
-    const products = [
-        {
-            key: 1,
-            path: '/network',
-            component: 'Network'
-        },
-        {
-            key: 2,
-            path: '/campaign',
-            component: 'props => <div>Campaign</div>'
-        }
-    ];
-    const columns = [{
-        dataField: 'key',
-        text: 'Key'
-    }, {
-        dataField: 'path',
-        text: 'Path'
-    }, {
-        dataField: 'component',
-        text: 'Component'
-    }];
-    return (
-        <div className="Network">
-            <BootstrapTable bootstrap4 keyField='key' data={ products } columns={ columns } pagination={paginationFactory()} />
+  const expandRow = {
+    renderer: row => {
+      return (
+        <div>
+          {/* {Object.keys(row)
+            .filter(
+              key => columns.findIndex(obj => obj.dataField === key) === -1
+            )
+            .map(key => {
+              return (
+                <div>
+                  {key}: {row[key]}
+                </div>
+              );
+            })} */}
+          something
         </div>
-    )
-}
+      );
+    }
+  };
+  const columns = [
+    {
+      dataField: "key",
+      text: "Key"
+    },
+    {
+      dataField: "path",
+      text: "Path"
+    },
+    {
+      dataField: "component",
+      text: "Component"
+    }
+  ];
+  return (
+    <div className="Network">
+      <BootstrapTable
+        hover
+        striped
+        bootstrap4
+        keyField="key"
+        data={data}
+        columns={columns}
+        pagination={paginationFactory()}
+        expandRow={expandRow}
+      />
+    </div>
+  );
+};
