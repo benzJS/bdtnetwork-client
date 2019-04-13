@@ -1,0 +1,51 @@
+.active {
+    background: black;
+}
+
+.body {
+    /* background: #777; */
+}
+
+.content {
+    padding-top: 4rem;
+}
+
+.sidebar {
+    height: 100%;
+    background: #1d2127;
+    color: #F3EFF5;
+    position: fixed;
+    width: 16rem;
+    text-align: start;
+}
+
+.sidebar-header {
+    text-align: end;
+}
+
+.sidebar-item {
+    padding: 10px 0;
+    display: block;
+    width: 100%;
+    color: #F3EFF5;
+    text-decoration: none;
+    text-transform: capitalize;
+    padding-left: 20px;
+}
+
+.sidebar-item:hover {
+    color: #F3EFF5;
+    text-decoration: none;
+    background: black;
+}
+
+.sidebar-icon {
+    padding: 1rem 1.5rem;
+}
+
+.sidebar-toggle {
+    cursor: pointer;
+    color: white;
+    background: black;
+    border-bottom-left-radius: 0.7rem;
+}

@@ -1,41 +1,34 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
-import axios from 'axios';
+import routes from './routes';
+
+import Header from './layouts/Header';
+import Body from './layouts/Body';
+import Home from './views/Home';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 class App extends Component {
   state = {
-    greeting: ''
-  }
-  componentDidMount() {
-    axios('/api/helloworld').then(res => {
-      this.setState(prevState => {
-        return {
-          ...prevState,
-          greeting: res.data.greeting
-        }
-      })
-    })
+    greeting: 'Hello World!'
   }
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            {this.state.greeting}
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
+      <Router>
+        <div className="App">
+          <Header/>
+          <Switch>
+            <Body>
+              <Route path='/' exact component={Home} />
+              {
+                routes.map(view => <Route key={view.path} path={view.path} component={view.component} />)
+              }
+            </Body>
+          </Switch>
+        </div>
+      </Router>
     );
   }
 }
