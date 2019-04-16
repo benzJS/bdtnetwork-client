@@ -1,3 +1,11 @@
+/* * {
+    overflow: hidden
+} */
+
+.onePx {
+    width: 1px !important;
+}
+
 .active {
     background: black;
 }
@@ -6,8 +14,36 @@
     /* background: #777; */
 }
 
+/* .rt-td[style] {
+    width: 1px !important
+}
+
+.rt-th[style] {
+    width: 1px !important
+} */
+
 .content {
-    padding-top: 4rem;
+    padding-top: 3rem;
+    /* position: relative; */
+    /* height: calc(100% - 3rem); */
+    height: 100%;
+}
+
+.loading {
+    background: rgba(3, 3, 3, 0.5);
+    position: absolute;
+    width: calc(100% - 16rem);
+    /* width: 100%; */
+    height: calc(100% - 3.5rem);
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.react-bootstrap-table-pagination-list {
+    /* display: flex !important;
+    justify-content: flex-end !important; */
 }
 
 .sidebar {

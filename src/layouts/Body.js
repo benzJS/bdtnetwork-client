@@ -1,9 +1,35 @@
-import React from "react";
-import { Container, Row } from "reactstrap";
+import React, { useState, useEffect } from "react";
+import { Container, Row, Spinner } from "reactstrap";
 
 import Sidebar from "../components/Sidebar";
 
 export default props => {
+  const [state, setState] = useState({
+    loading: true
+  });
+  const Loading = props => {
+    return (
+      <div className="loading">
+        <Spinner color="white" />
+      </div>
+    )
+  }
+  useEffect(() => {
+    setState(prevState => {
+      return {
+        ...prevState,
+        loading: true
+      }
+    });
+    setTimeout(() => {
+      setState(prevState => {
+        return {
+          ...prevState,
+          loading: false
+        }
+      })
+    }, 300);
+  }, [props])
   return (
     <Container fluid>
       <Row className="body">
@@ -18,15 +44,19 @@ export default props => {
           <div
             style={{
               background: "#34495e",
-              padding: "0.75rem 0",
+              padding: "0.48rem 0",
               color: "#F3EFF5",
               position: "fixed",
-              width: "calc(100% - 16rem)"
+              width: "calc(100% - 16rem)",
+              zIndex: 3
             }}
           >
-            Cat
+            <span style={{paddingLeft: 20, margin: 0, textTransform: 'capitalize', fontSize: '1.4em', fontWeight: 'lighter'}}>{props.location.pathname.substring(1) || 'home' }</span>
           </div>
-          <div className="content">{props.children}</div>
+          <div className="content d-flex align-items-center">
+            {state.loading && <Loading/>}
+            {props.children}
+          </div>
         </div>
       </Row>
     </Container>
