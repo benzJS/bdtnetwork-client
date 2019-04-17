@@ -12,22 +12,15 @@ import 'react-table/react-table.css'
 import data from "../data";
 
 export default props => {
-    const copyToClipboard = index => {
-        console.log(index);
-        setState(prevState => {
-            const ref = React.createRef();
-            return {
-                ...prevState,
-                inputRef: ref
-            }
-        });
+    const copyToClipboard = text => {
+        navigator.clipboard.writeText(text);
     }
     const getColumns = (id = -1) => {
         // console.log('get columns...', state);
         debugger;
         const width = window.innerWidth;
         const numberOfCol = width >= 1200 ? 8 : width >= 992 ? 6 : width >= 768 ? 4 : 3;
-        return Object.keys(data[0]).slice(0, numberOfCol).map((key, index) => {
+        return Object.keys(data[0]).slice(0, numberOfCol).map(key => {
             const column = {
                 Header: key,
                 accessor: key,
@@ -39,9 +32,9 @@ export default props => {
                 {
                     return (
                         <InputGroup>
-                            <Input value={props.value} readOnly innerRef={props.original.id === id && state.inputRef} />
+                            <Input value={props.value} readOnly />
                             <InputGroupAddon addonType="append">
-                                <Button style={{zIndex: 1}} onClick={copyToClipboard.bind(this, props.original.id)}>Copy</Button>
+                                <Button style={{zIndex: 1}} onClick={copyToClipboard.bind(this, props.value)}>Copy</Button>
                             </InputGroupAddon>
                         </InputGroup>
                     )
@@ -74,20 +67,6 @@ export default props => {
         );
     }
     useEffect(() => {
-        if(state.inputRef && state.inputRef.current) {
-            state.inputRef.current.select();
-            document.execCommand('copy');
-            console.log(state.inputRef.current, 'copied');
-            setState(prevState => {
-                return {
-                    ...prevState,
-                    inputRef: null
-                }
-            });  
-        }
-        console.log(state.inputRef, 'rendered');
-    })
-    useEffect(() => {
         setState(prevState => {
             return {
                 ...prevState,
@@ -113,7 +92,6 @@ export default props => {
                 resizable={false}
                 SubComponent={Object.keys(data[0]).length > state.columns.length ? SubComponent : null}
             />
-            {/* {state.inputRef && <input style={{display: 'none'}} ref={state.inputRef.ref} type="text" defaultValue={state.inputRef.value} />} */}
         </Container>
     )
 }
