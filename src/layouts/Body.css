@@ -2,10 +2,6 @@
     overflow: hidden
 } */
 
-.onePx {
-    width: 1px !important;
-}
-
 .active {
     background: black;
 }
@@ -14,19 +10,29 @@
     /* background: #777; */
 }
 
-/* .rt-td[style] {
-    width: 1px !important
-}
-
-.rt-th[style] {
-    width: 1px !important
-} */
-
 .content {
     padding-top: 3rem;
     /* position: relative; */
     /* height: calc(100% - 3rem); */
     height: 100%;
+}
+
+.menu-bar {
+    width: 100%;
+    /* background: #1d2127; */
+    padding: 10px 0;
+}
+
+.btn-primary {
+    background: rgb(52, 73, 94) !important;
+}
+
+.input-group {
+    border-radius: 1.5rem;
+}
+
+.ReactTable {
+    border: 0 !important;
 }
 
 .loading {

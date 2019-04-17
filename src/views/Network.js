@@ -3,30 +3,32 @@ import React, { useState, useEffect } from "react";
 // import BootstrapTable from "react-bootstrap-table-next";
 // import paginationFactory from "react-bootstrap-table2-paginator";
 // import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
-import ReactTable from "react-table";
-import { Container, InputGroup, InputGroupAddon, Button, Input } from 'reactstrap';
+import ReactTable, { ReactTableDefaults } from "react-table";
+import { Container, InputGroup, InputGroupAddon, Button, Input, Table } from 'reactstrap';
 
 // import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import 'react-table/react-table.css'
 
 import data from "../data";
 
+Object.assign(ReactTableDefaults, {
+    column: {
+        ...ReactTableDefaults.column,
+        headerStyle: {background: '#1d2127', color: 'white', width: '1px !important'}
+    }
+})
+
 export default props => {
     const copyToClipboard = text => {
         navigator.clipboard.writeText(text);
     }
     const getColumns = (id = -1) => {
-        // console.log('get columns...', state);
-        debugger;
         const width = window.innerWidth;
         const numberOfCol = width >= 1200 ? 8 : width >= 992 ? 6 : width >= 768 ? 4 : 3;
         return Object.keys(data[0]).slice(0, numberOfCol).map(key => {
             const column = {
                 Header: key,
-                accessor: key,
-                className: 'onePx',
-                headerStyle: {background: '#1d2127', color: 'white', width: '1px !important'},
-                Cell: ({value}) => `${value}`
+                accessor: key
             }
             key === 'first_name' && (column.Cell = props =>
                 {
@@ -46,7 +48,8 @@ export default props => {
     const [state, setState] = useState({
         columns: [],
         progressValue: 20,
-        inputRef: null
+        inputRef: null,
+        isMenuOpen: false
     })
     const SubComponent = row => {
         const missingCol = Object.keys(data[0]).filter(
@@ -84,12 +87,21 @@ export default props => {
     }, []);
     return (
         <Container>
+            <div className="menu-bar">
+                <Button color="primary">Add new item</Button>
+            </div>
             <ReactTable
+                // TableComponent={props => <table {...props}>{props.children}</table>}
+                // TheadComponent={props => <thead {...props}>{props.children}</thead>}
+                // TbodyComponent={props => <tbody {...props}>{props.children}</tbody>}
+                // ThComponent={props => <th {...props}>{props.children}</th>}
+                // TrGroupComponent={props => <tr {...props}>{props.children}</tr>}
+                // TrComponent={props => <tr {...props}>{props.children}</tr>}
+                // TdComponent={props => <td {...props}>{props.children}</td>}
                 data={data}
                 columns={state.columns}
                 className="-striped"
                 defaultPageSize={10}
-                resizable={false}
                 SubComponent={Object.keys(data[0]).length > state.columns.length ? SubComponent : null}
             />
         </Container>
