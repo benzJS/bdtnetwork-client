@@ -30,6 +30,10 @@ import 'react-table/react-table.css'
 import data from "../data";
 
 Object.assign(ReactTableDefaults, {
+    defaultFilterMethod: (filter, row, column) => {
+        const id = filter.pivotId || filter.id
+        return row[id] !== undefined ? String(row[id]).toLowerCase().startsWith(filter.value.toLowerCase()) : true
+    },
     column: {
         ...ReactTableDefaults.column,
         headerStyle: {background: '#1d2127', color: 'white', width: '1px !important'}
@@ -43,33 +47,47 @@ export default props => {
     const getColumns = () => {
         const width = window.innerWidth;
         const numberOfCol = width >= 1200 ? 8 : width >= 992 ? 6 : width >= 768 ? 4 : 3;
-        return Object.keys(data[0]).slice(0, numberOfCol).map(key => {
+        const columns = Object.keys(data[0]).slice(0, numberOfCol).map(key => {
             const column = {
                 Header: key,
                 accessor: key,
-                Cell: props => `${props.value}`
+                Cell: props => `${props.value}`,
+                // filterable: true
             }
-            key === 'first_name' && (column.Cell = props =>
-                {
+            // if(key === 'id') column.minWidth = '50px';
+            if(key === 'first_name') {
+                column.Cell = props => {
                     return (
                         <InputGroup>
                             <Input value={props.value} readOnly />
                             <InputGroupAddon addonType="append">
-                                <Button style={{zIndex: 1}} onClick={copyToClipboard.bind(this, props.value)}>Copy</Button>
+                                <Button style={{zIndex: 1}} onClick={copyToClipboard.bind(this, props.value)}><i className="far fa-copy"></i></Button>
                             </InputGroupAddon>
                         </InputGroup>
                     )
                 }
-            )
+            }
             return column;
         });
+        columns.push({
+            Header: 'action',
+            filterable: false,
+            Cell: props => (
+                <div className="text-center">
+                    <i className="fas fa-edit mr-3" onClick={toggle.bind(this, null, props.original)} />
+                    <i className="fas fa-trash-alt text-danger" />
+                </div>
+            )
+        });
+        return columns;
     }
     const [state, setState] = useState({
         columns: [],
         progressValue: 20,
         inputRef: null,
         isMenuOpen: false,
-        modal: false
+        modal: false,
+        formikInit: { name: '', type: 'banner', postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}', response: 1 }
     })
     const SubComponent = row => {
         const missingCol = Object.keys(data[0]).filter(
@@ -89,14 +107,28 @@ export default props => {
             </ul>
         );
     }
-    const toggle = () => {
+    const toggle = (e, formikInit = null) => {
+        // console.log(formikInit);
         setState(prevState => {
             return {
                 ...prevState,
+                // formikInit: formikInit ? formikInit : prevState.formikInit,
                 modal: !prevState.modal
             }
-        })
+        });
+        if(formikInit) {
+            console.log('truthy');
+            setState(prevState => {
+                return {
+                    ...prevState,
+                    formikInit: { name: 'fucking truthy', type: 'banner', postback: '', response: 2 }
+                }
+            });
+        }
     }
+    useEffect(() => {
+        console.log(state.formikInit);
+    }, [state.formikInit])
     useEffect(() => {
         setState(prevState => {
             return {
@@ -122,7 +154,7 @@ export default props => {
                         <Button color="danger">Delete multiples</Button>
                     </Col>
                     <Col md="6">
-                        <Input placeholder="search..." />
+                        {/* <Input placeholder="search..." /> */}
                     </Col>
                 </Row>
             </div>
@@ -138,10 +170,12 @@ export default props => {
                 columns={state.columns}
                 className="-striped"
                 defaultPageSize={10}
+                filterable
+                resizable={false}
                 SubComponent={Object.keys(data[0]).length > state.columns.length ? SubComponent : null}
             />
             <Formik
-                initialValues={{ name: '', type: 'banner', postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}', response: 1 }}
+                initialValues={state.formikInit}
                 onSubmit={(values, actions) => {
                     // setTimeout(() => {
                     //     alert(JSON.stringify(values, null, 2));
@@ -163,7 +197,7 @@ export default props => {
                         <ModalHeader toggle={toggle}>Add new item</ModalHeader>
                         <Form onSubmit={props.handleSubmit}>
                             <ModalBody>
-                                {props.isValid.global && <Alert color="danger">{props.errors.global}</Alert>}
+                                {props.errors.global && <Alert color="danger">{props.errors.global}</Alert>}
                                 <FormGroup row>
                                     <Label for="exampleEmail" sm={2}>Name</Label>
                                     <Col sm={10}>
@@ -185,7 +219,7 @@ export default props => {
                                         <InputGroup>
                                             <Input type="text" name="postback" value={props.values.postback} onChange={props.handleChange} />
                                             <InputGroupAddon addonType="append">
-                                                <Button style={{zIndex: 1}} onClick={copyToClipboard.bind(this, props.values.postback)}>Copy</Button>
+                                                <Button style={{zIndex: 1}} onClick={copyToClipboard.bind(this, props.values.postback)}><i className="far fa-copy"></i></Button>
                                             </InputGroupAddon>
                                         </InputGroup>
                                     </Col>
