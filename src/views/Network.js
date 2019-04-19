@@ -31,12 +31,15 @@ import data from "../data";
 
 Object.assign(ReactTableDefaults, {
     defaultFilterMethod: (filter, row, column) => {
-        const id = filter.pivotId || filter.id
-        return row[id] !== undefined ? String(row[id]).toLowerCase().startsWith(filter.value.toLowerCase()) : true
+        // console.log(filter, row);
+        const id = filter.pivotId || filter.id;
+        const rs = row[id] !== undefined ? String(row[id]).toLowerCase().includes(filter.value.toLowerCase()) : true;
+        return rs;
     },
     column: {
         ...ReactTableDefaults.column,
-        headerStyle: {background: '#1d2127', color: 'white', width: '1px !important'}
+        headerStyle: {background: '#1d2127', color: 'white', width: '1px !important'},
+        headerClassName: 'text-capitalize'
     }
 })
 
@@ -44,18 +47,20 @@ export default props => {
     const copyToClipboard = text => {
         navigator.clipboard.writeText(text);
     }
-    const getColumns = () => {
+    const getColumns = (data) => {
         const width = window.innerWidth;
         const numberOfCol = width >= 1200 ? 8 : width >= 992 ? 6 : width >= 768 ? 4 : 3;
-        const columns = Object.keys(data[0]).slice(0, numberOfCol).map(key => {
+        const keys = Object.keys(data[0]);
+        const _idIndex = keys.indexOf('_id');
+        const columns = keys.slice(0, _idIndex).concat(keys.slice(_idIndex + 1, numberOfCol)).sort().map(key => {
             const column = {
                 Header: key,
                 accessor: key,
-                Cell: props => `${props.value}`,
+                Cell: props => `${props.value}`
                 // filterable: true
             }
             // if(key === 'id') column.minWidth = '50px';
-            if(key === 'first_name') {
+            if(key === 'postback') {
                 column.Cell = props => {
                     return (
                         <InputGroup>
@@ -74,8 +79,8 @@ export default props => {
             filterable: false,
             Cell: props => (
                 <div className="text-center">
-                    <i className="fas fa-edit mr-3" onClick={toggle.bind(this, null, props.original)} />
-                    <i className="fas fa-trash-alt text-danger" />
+                    <i className="fas fa-edit mr-3" role="button" onClick={e => toggle(props.original)} />
+                    <i className="fas fa-trash-alt text-danger" role="button" onClick={e => deleteOne(props.original._id)} />
                 </div>
             )
         });
@@ -83,14 +88,18 @@ export default props => {
     }
     const [state, setState] = useState({
         columns: [],
+        data: [],
         progressValue: 20,
         inputRef: null,
         isMenuOpen: false,
         modal: false,
-        formikInit: { name: '', type: 'banner', postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}', response: 1 }
+        formikInit: { name: '', type: 'banner', postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}', response: 1 },
+        currentPage: 0
     })
     const SubComponent = row => {
-        const missingCol = Object.keys(data[0]).filter(
+        const keys = Object.keys(state.data[0]);
+        const _idIndex = keys.indexOf('_id');
+        const missingCol = keys.slice(0, _idIndex).concat(keys.slice(_idIndex + 1)).filter(
             key => state.columns.findIndex(obj => obj.accessor === key) === -1
         );
         return (
@@ -107,7 +116,7 @@ export default props => {
             </ul>
         );
     }
-    const toggle = (e, formikInit = null) => {
+    const toggle = (formikInit = null) => {
         // console.log(formikInit);
         setState(prevState => {
             return {
@@ -117,30 +126,54 @@ export default props => {
             }
         });
         if(formikInit) {
-            console.log('truthy');
             setState(prevState => {
                 return {
                     ...prevState,
-                    formikInit: { name: 'fucking truthy', type: 'banner', postback: '', response: 2 }
+                    formikInit: formikInit
                 }
             });
         }
     }
+    const deleteOne = id => {
+        axios.delete(`http://localhost:5000/network/${id}`)
+            .then(res => {
+                axios.get('http://localhost:5000/network')
+                    .then(res => {
+                        const data = res.data.data;
+                        setState(prevState => {
+                            return {
+                                ...prevState,
+                                data
+                            }
+                        });
+                    });
+            })
+            .catch(res => {
+
+            })
+    }
     useEffect(() => {
-        console.log(state.formikInit);
-    }, [state.formikInit])
-    useEffect(() => {
-        setState(prevState => {
-            return {
-                ...prevState,
-                columns: getColumns()
-            }
-        })
+        axios.get('http://localhost:5000/network')
+            .then(res => {
+                const data = res.data.data;
+                setState(prevState => {
+                    return {
+                        ...prevState,
+                        data
+                    }
+                });
+                setState(prevState => {
+                    return {
+                        ...prevState,
+                        columns: getColumns(prevState.data)
+                    }
+                });
+            });
         window.onresize = function() {
             setState(prevState => {
                 return {
                     ...prevState,
-                    columns: getColumns()
+                    columns: getColumns(prevState.data)
                 }
             })
         }
@@ -150,8 +183,17 @@ export default props => {
             <div className="menu-bar">
                 <Row>
                     <Col md="6">
-                        <Button color="info" className="mr-3" onClick={toggle}>Add new item</Button>
-                        <Button color="danger">Delete multiples</Button>
+                        <Button
+                            color="info"
+                            className="mr-3"
+                            onClick={e => toggle({
+                                name: '',
+                                type: 'banner',
+                                postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}',
+                                response: 1 
+                            })}
+                        >Add new item</Button>
+                        <Button color="danger">Delete multiple</Button>
                     </Col>
                     <Col md="6">
                         {/* <Input placeholder="search..." /> */}
@@ -159,20 +201,17 @@ export default props => {
                 </Row>
             </div>
             <ReactTable
-                // TableComponent={props => <table {...props}>{props.children}</table>}
-                // TheadComponent={props => <thead {...props}>{props.children}</thead>}
-                // TbodyComponent={props => <tbody {...props}>{props.children}</tbody>}
-                // ThComponent={props => <th {...props}>{props.children}</th>}
-                // TrGroupComponent={props => <tr {...props}>{props.children}</tr>}
-                // TrComponent={props => <tr {...props}>{props.children}</tr>}
-                // TdComponent={props => <td {...props}>{props.children}</td>}
-                data={data}
+                data={state.data}
                 columns={state.columns}
+                pageSizeOptions={[1, 2, 3, 4]}
+                defaultPageSize={4}
+                page={state.currentPage}
+                onPageChange={pageIndex => setState(prevState => {return {...prevState, currentPage: pageIndex}})}
                 className="-striped"
-                defaultPageSize={10}
                 filterable
+                isLoading
                 resizable={false}
-                SubComponent={Object.keys(data[0]).length > state.columns.length ? SubComponent : null}
+                SubComponent={Object.keys(state.data.length > 0 && state.data[0]).length > state.columns.length ? SubComponent : null}
             />
             <Formik
                 initialValues={state.formikInit}
@@ -185,6 +224,17 @@ export default props => {
                         .then(res => {
                             alert(JSON.stringify(res.data.data, null, 2));
                             actions.setSubmitting(false);
+                            axios.get('http://localhost:5000/network')
+                                .then(res => {
+                                    const data = res.data.data;
+                                    setState(prevState => {
+                                        return {
+                                            ...prevState,
+                                            data
+                                        }
+                                    });
+                                });
+                            toggle();
                             return;
                         }).catch(err => {
                             console.log(err);
@@ -192,9 +242,10 @@ export default props => {
                             actions.setSubmitting(false);
                         });
                 }}
+                enableReinitialize
                 render={props => {return (
                     <Modal isOpen={state.modal} toggle={toggle} >
-                        <ModalHeader toggle={toggle}>Add new item</ModalHeader>
+                        <ModalHeader toggle={toggle}>Add/Edit item</ModalHeader>
                         <Form onSubmit={props.handleSubmit}>
                             <ModalBody>
                                 {props.errors.global && <Alert color="danger">{props.errors.global}</Alert>}

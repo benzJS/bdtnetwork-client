@@ -2,6 +2,8 @@
     overflow: hidden
 } */
 
+[role=button]{cursor:pointer}
+
 .active {
     background: black;
 }
