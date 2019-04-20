@@ -79,7 +79,7 @@ export default props => {
             filterable: false,
             Cell: props => (
                 <div className="text-center">
-                    <i className="fas fa-edit mr-3" role="button" onClick={e => toggle(props.original)} />
+                    <i className="fas fa-edit mr-3" role="button" onClick={e => toggle({...props.original, _id: props.original._id})} />
                     <i className="fas fa-trash-alt text-danger" role="button" onClick={e => deleteOne(props.original._id)} />
                 </div>
             )
@@ -117,25 +117,24 @@ export default props => {
         );
     }
     const toggle = (formikInit = null) => {
-        // console.log(formikInit);
-        setState(prevState => {
+        setState(prevState => { // toggle with default formik data
             return {
                 ...prevState,
-                // formikInit: formikInit ? formikInit : prevState.formikInit,
                 modal: !prevState.modal
             }
         });
-        if(formikInit) {
+        if(formikInit) { // toggle with specific formik data
             setState(prevState => {
                 return {
                     ...prevState,
-                    formikInit: formikInit
+                    formikInit
                 }
             });
         }
     }
     const deleteOne = id => {
-        axios.delete(`http://localhost:5000/network/${id}`)
+        //eslint-disable-next-line
+        confirm('Chắc chắn muốn xóa bản ghi này?') && axios.delete(`http://localhost:5000/network/${id}`)
             .then(res => {
                 axios.get('http://localhost:5000/network')
                     .then(res => {
@@ -151,6 +150,51 @@ export default props => {
             .catch(res => {
 
             })
+    }
+    const handleSubmit = (values, actions) => {
+        if(values._id) {
+            axios.put(`http://localhost:5000/network/${values._id}`, values)
+                .then(res => {
+                    actions.setSubmitting(false);
+                    axios.get('http://localhost:5000/network')
+                        .then(res => {
+                            const data = res.data.data;
+                            setState(prevState => {
+                                return {
+                                    ...prevState,
+                                    data
+                                }
+                            });
+                        });
+                    toggle();
+                    return;
+                })
+                .catch(res => {
+                    actions.setErrors({global: 'Failed'});
+                    actions.setSubmitting(false);
+                })
+        } else {
+            axios.post('http://localhost:5000/network', values)
+                .then(res => {
+                    alert(JSON.stringify(res.data.data, null, 2));
+                    actions.setSubmitting(false);
+                    axios.get('http://localhost:5000/network')
+                        .then(res => {
+                            const data = res.data.data;
+                            setState(prevState => {
+                                return {
+                                    ...prevState,
+                                    data
+                                }
+                            });
+                        });
+                    toggle();
+                    return;
+                }).catch(err => {
+                    actions.setErrors({global: 'Failed'});
+                    actions.setSubmitting(false);
+                });
+        }
     }
     useEffect(() => {
         axios.get('http://localhost:5000/network')
@@ -190,7 +234,7 @@ export default props => {
                                 name: '',
                                 type: 'banner',
                                 postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}',
-                                response: 1 
+                                response: 1
                             })}
                         >Add new item</Button>
                         <Button color="danger">Delete multiple</Button>
@@ -204,7 +248,7 @@ export default props => {
                 data={state.data}
                 columns={state.columns}
                 pageSizeOptions={[1, 2, 3, 4]}
-                defaultPageSize={4}
+                defaultPageSize={5}
                 page={state.currentPage}
                 onPageChange={pageIndex => setState(prevState => {return {...prevState, currentPage: pageIndex}})}
                 className="-striped"
@@ -215,33 +259,7 @@ export default props => {
             />
             <Formik
                 initialValues={state.formikInit}
-                onSubmit={(values, actions) => {
-                    // setTimeout(() => {
-                    //     alert(JSON.stringify(values, null, 2));
-                    //     actions.setSubmitting(false);
-                    // }, 1000);
-                    axios.post('http://localhost:5000/network', values)
-                        .then(res => {
-                            alert(JSON.stringify(res.data.data, null, 2));
-                            actions.setSubmitting(false);
-                            axios.get('http://localhost:5000/network')
-                                .then(res => {
-                                    const data = res.data.data;
-                                    setState(prevState => {
-                                        return {
-                                            ...prevState,
-                                            data
-                                        }
-                                    });
-                                });
-                            toggle();
-                            return;
-                        }).catch(err => {
-                            console.log(err);
-                            actions.setErrors({global: 'Failed'});
-                            actions.setSubmitting(false);
-                        });
-                }}
+                onSubmit={handleSubmit}
                 enableReinitialize
                 render={props => {return (
                     <Modal isOpen={state.modal} toggle={toggle} >
@@ -281,6 +299,7 @@ export default props => {
                                         <Input type="text" name="response" placeholder="Response" value={props.values.response} onChange={props.handleChange} />
                                     </Col>
                                 </FormGroup>
+                                {/* { props.values._id && <Input type="hidden" name="_id" defaultValue={props.values._id} /> } */}
                             </ModalBody>
                             <ModalFooter>
                                 <Button type="submit" color="info" disabled={props.isSubmitting} >Submit</Button>{' '}
@@ -293,71 +312,3 @@ export default props => {
         </Container>
     )
 }
-
-// export default props => {
-//     const getColumns = () => {
-//         const width = window.innerWidth;
-//         const numberOfCol = width >= 1200 ? 8 : width >= 992 ? 6 : width >= 768 ? 4 : 3;
-//         return Object.keys(data[0]).slice(0, numberOfCol).map(key => {
-//             return {
-//                 dataField: key,
-//                 text: key,
-//                 sort: true,
-//                 editor: {
-//                     type: Type.TEXT
-//                 }
-//             } 
-//         });
-//     }
-//     const [state, setState] = useState({
-//         columns: getColumns(),
-//     })
-// const expandRow = {
-//     renderer: row => {
-//         const missingCol = Object.keys(data[0]).filter(
-//             key => state.columns.findIndex(obj => obj.dataField === key) === -1
-//         );
-//         return (
-//             <div>
-//                 {
-//                     missingCol.map(key => {
-//                         return (
-//                             <div key={key}>
-//                                 <b class="text-capitalize">{key}</b>: {`${row[key]}`}
-//                             </div>
-//                         );
-//                     })
-//                 }
-//             </div>
-//         );
-//     },
-//         expanded: []
-//     }
-//     useEffect(() => {
-//         window.onresize = function() {
-//             setState(prevState => {
-//                 return {
-//                     ...prevState,
-//                     columns: getColumns()
-//                 }
-//             });
-//         }
-//     }, []);
-//     return (
-//         <Container className="Network">
-//             <BootstrapTable
-//                 hover
-//                 striped
-//                 bootstrap4
-//                 condensed
-//                 keyField="id"
-//                 data={data}
-//                 columns={state.columns}
-//                 headerClasses="thead-dark text-capitalize"
-//                 pagination={paginationFactory({showTotal: true})}
-//                 cellEdit={ cellEditFactory({ mode: 'dbclick' }) }
-//                 expandRow={expandRow}
-//             />
-//         </Container>
-//     );
-// };
