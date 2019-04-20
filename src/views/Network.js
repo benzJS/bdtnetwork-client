@@ -52,14 +52,12 @@ export default props => {
         const numberOfCol = width >= 1200 ? 8 : width >= 992 ? 6 : width >= 768 ? 4 : 3;
         const keys = Object.keys(data[0]);
         const _idIndex = keys.indexOf('_id');
-        const columns = keys.slice(0, _idIndex).concat(keys.slice(_idIndex + 1, numberOfCol)).sort().map(key => {
+        const columns = keys.slice(0, _idIndex).concat(keys.slice(_idIndex + 1, numberOfCol)).sort().map(key => { // we don't want _id field to be rendered
             const column = {
                 Header: key,
                 accessor: key,
                 Cell: props => `${props.value}`
-                // filterable: true
             }
-            // if(key === 'id') column.minWidth = '50px';
             if(key === 'postback') {
                 column.Cell = props => {
                     return (
@@ -79,7 +77,7 @@ export default props => {
             filterable: false,
             Cell: props => (
                 <div className="text-center">
-                    <i className="fas fa-edit mr-3" role="button" onClick={e => toggle({...props.original, _id: props.original._id})} />
+                    <i className="fas fa-edit mr-3" role="button" onClick={e => handleFormikChange({...props.original, _id: props.original._id})} />
                     <i className="fas fa-trash-alt text-danger" role="button" onClick={e => deleteOne(props.original._id)} />
                 </div>
             )
@@ -89,8 +87,6 @@ export default props => {
     const [state, setState] = useState({
         columns: [],
         data: [],
-        progressValue: 20,
-        inputRef: null,
         isMenuOpen: false,
         modal: false,
         formikInit: { name: '', type: 'banner', postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}', response: 1 },
@@ -116,21 +112,22 @@ export default props => {
             </ul>
         );
     }
-    const toggle = (formikInit = null) => {
-        setState(prevState => { // toggle with default formik data
+    const toggle = () => {
+        setState(prevState => {
             return {
                 ...prevState,
                 modal: !prevState.modal
             }
         });
-        if(formikInit) { // toggle with specific formik data
-            setState(prevState => {
-                return {
-                    ...prevState,
-                    formikInit
-                }
-            });
-        }
+    }
+    const handleFormikChange = formikInit => {
+        setState(prevState => {
+            return {
+                ...prevState,
+                formikInit
+            }
+        });
+        toggle();
     }
     const deleteOne = id => {
         //eslint-disable-next-line
@@ -230,7 +227,7 @@ export default props => {
                         <Button
                             color="info"
                             className="mr-3"
-                            onClick={e => toggle({
+                            onClick={e => handleFormikChange({
                                 name: '',
                                 type: 'banner',
                                 postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}',
@@ -257,58 +254,60 @@ export default props => {
                 resizable={false}
                 SubComponent={Object.keys(state.data.length > 0 && state.data[0]).length > state.columns.length ? SubComponent : null}
             />
-            <Formik
-                initialValues={state.formikInit}
-                onSubmit={handleSubmit}
-                enableReinitialize
-                render={props => {return (
-                    <Modal isOpen={state.modal} toggle={toggle} >
-                        <ModalHeader toggle={toggle}>Add/Edit item</ModalHeader>
-                        <Form onSubmit={props.handleSubmit}>
-                            <ModalBody>
-                                {props.errors.global && <Alert color="danger">{props.errors.global}</Alert>}
-                                <FormGroup row>
-                                    <Label for="exampleEmail" sm={2}>Name</Label>
-                                    <Col sm={10}>
-                                        <Input type="text" name="name" placeholder="Network" value={props.values.name} onChange={props.handleChange} />
-                                    </Col>
-                                </FormGroup>
-                                <FormGroup row>
-                                    <Label for="exampleSelect" sm={2}>Type</Label>
-                                    <Col sm={10}>
-                                        <Input type="select" name="type" value={props.values.type} onChange={props.handleChange} >
-                                            <option value="banner">Banner</option>
-                                            <option value="wall">Wall</option>
-                                        </Input>
-                                    </Col>
-                                </FormGroup>
-                                <FormGroup row>
-                                    <Label for="examplePassword" sm={2}>Postback</Label>
-                                    <Col sm={10}>
-                                        <InputGroup>
-                                            <Input type="text" name="postback" value={props.values.postback} onChange={props.handleChange} />
-                                            <InputGroupAddon addonType="append">
-                                                <Button style={{zIndex: 1}} onClick={copyToClipboard.bind(this, props.values.postback)}><i className="far fa-copy"></i></Button>
-                                            </InputGroupAddon>
-                                        </InputGroup>
-                                    </Col>
-                                </FormGroup>
-                                <FormGroup row>
-                                    <Label for="examplePassword" sm={2}>Response</Label>
-                                    <Col sm={10}>
-                                        <Input type="text" name="response" placeholder="Response" value={props.values.response} onChange={props.handleChange} />
-                                    </Col>
-                                </FormGroup>
-                                {/* { props.values._id && <Input type="hidden" name="_id" defaultValue={props.values._id} /> } */}
-                            </ModalBody>
-                            <ModalFooter>
-                                <Button type="submit" color="info" disabled={props.isSubmitting} >Submit</Button>{' '}
-                                <Button color="secondary" onClick={toggle} disabled={props.isSubmitting} >Cancel</Button>
-                            </ModalFooter>
-                        </Form>
-                    </Modal>
-                )}}
-            />
+            <Modal isOpen={state.modal} toggle={toggle} >
+                <ModalHeader toggle={toggle}>Add/Edit item</ModalHeader>
+                <Formik
+                    initialValues={state.formikInit}
+                    onSubmit={handleSubmit}
+                    enableReinitialize
+                >
+                    {
+                        props => {return (
+                            <Form onSubmit={props.handleSubmit}>
+                                <ModalBody>
+                                    {props.errors.global && <Alert color="danger">{props.errors.global}</Alert>}
+                                    <FormGroup row>
+                                        <Label for="exampleEmail" sm={2}>Name</Label>
+                                        <Col sm={10}>
+                                            <Input type="text" name="name" placeholder="Network" value={props.values.name} onChange={props.handleChange} />
+                                        </Col>
+                                    </FormGroup>
+                                    <FormGroup row>
+                                        <Label for="exampleSelect" sm={2}>Type</Label>
+                                        <Col sm={10}>
+                                            <Input type="select" name="type" value={props.values.type} onChange={props.handleChange} >
+                                                <option value="banner">Banner</option>
+                                                <option value="wall">Wall</option>
+                                            </Input>
+                                        </Col>
+                                    </FormGroup>
+                                    <FormGroup row>
+                                        <Label for="examplePassword" sm={2}>Postback</Label>
+                                        <Col sm={10}>
+                                            <InputGroup>
+                                                <Input type="text" name="postback" value={props.values.postback} onChange={props.handleChange} />
+                                                <InputGroupAddon addonType="append">
+                                                    <Button style={{zIndex: 1}} onClick={copyToClipboard.bind(this, props.values.postback)}><i className="far fa-copy"></i></Button>
+                                                </InputGroupAddon>
+                                            </InputGroup>
+                                        </Col>
+                                    </FormGroup>
+                                    <FormGroup row>
+                                        <Label for="examplePassword" sm={2}>Response</Label>
+                                        <Col sm={10}>
+                                            <Input type="text" name="response" placeholder="Response" value={props.values.response} onChange={props.handleChange} />
+                                        </Col>
+                                    </FormGroup>
+                                </ModalBody>
+                                <ModalFooter>
+                                    <Button type="submit" color="info" disabled={props.isSubmitting} >Submit</Button>{' '}
+                                    <Button color="secondary" onClick={toggle} disabled={props.isSubmitting} >Cancel</Button>
+                                </ModalFooter>
+                            </Form>
+                        )}
+                    }
+                </Formik>
+            </Modal>
         </Container>
     )
 }
