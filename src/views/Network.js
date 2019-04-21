@@ -50,9 +50,10 @@ export default props => {
     const getColumns = (data) => {
         const width = window.innerWidth;
         const numberOfCol = width >= 1200 ? 8 : width >= 992 ? 6 : width >= 768 ? 4 : 3;
-        const keys = Object.keys(data[0]);
+        const keys = Object.keys(data[0]).sort();
         const _idIndex = keys.indexOf('_id');
         const columns = keys.slice(0, _idIndex).concat(keys.slice(_idIndex + 1, numberOfCol)).sort().map(key => { // we don't want _id field to be rendered
+        // const columns = keys.slice(0, numberOfCol).map(key => {
             const column = {
                 Header: key,
                 accessor: key,
@@ -90,7 +91,7 @@ export default props => {
         isMenuOpen: false,
         modal: false,
         formikInit: { name: '', type: 'banner', postback: 'https://api.bdtnetworks.com/banner/BNaHmwWryUCS8siBhiNnA/{sub_id}', response: 1 },
-        currentPage: 0
+        tablePage: 0
     })
     const SubComponent = row => {
         const keys = Object.keys(state.data[0]);
@@ -244,10 +245,10 @@ export default props => {
             <ReactTable
                 data={state.data}
                 columns={state.columns}
-                pageSizeOptions={[1, 2, 3, 4]}
+                pageSizeOptions={[5, 10, 15, 20, 25, 30]}
                 defaultPageSize={5}
-                page={state.currentPage}
-                onPageChange={pageIndex => setState(prevState => {return {...prevState, currentPage: pageIndex}})}
+                page={state.tablePage}
+                onPageChange={pageIndex => setState(prevState => {return {...prevState, tablePage: pageIndex}})}
                 className="-striped"
                 filterable
                 isLoading

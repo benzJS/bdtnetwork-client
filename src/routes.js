@@ -1,6 +1,8 @@
 import React from 'react';
 
 import Network from './views/Network';
+import Campaign from './views/Campaign';
+import Leading from './views/Leading';
 
 export default [
     {
@@ -9,6 +11,10 @@ export default [
     },
     {
         path: '/campaign',
-        component: props => <div>Campaign</div>
+        component: Campaign
+    },
+    {
+        path: '/leading',
+        component: Leading
     }
 ]
